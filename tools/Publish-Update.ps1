@@ -3,7 +3,8 @@ param(
     [Parameter(Mandatory=$true)][string]$Version,
     [Parameter(Mandatory=$true)][string]$PackageUrl,
     [Parameter(Mandatory=$true)][string]$PrivateKeyPath,
-    [Parameter(Mandatory=$true)][string]$Destination
+    [Parameter(Mandatory=$true)][string]$Destination,
+    [string]$Notes = '修复安装器无限等待，增加具体进度、停止安装和旧版中断恢复。'
 )
 $ErrorActionPreference='Stop'
 Add-Type -AssemblyName System.Security
@@ -36,7 +37,7 @@ try {
         $files+=@{Path=$relative;Sha256=$hash;Size=$item.Length}
     }
 } finally { $archive.Dispose();$stream.Dispose() }
-$release=[ordered]@{Schema=1;Product='OwnDesk';Version=$Version;Architecture='x64';Channel='stable';PackageUrl=$PackageUrl;Sha256=(Get-FileHash -LiteralPath $zipPath -Algorithm SHA256).Hash.ToLowerInvariant();Size=(Get-Item -LiteralPath $zipPath).Length;Notes='单文件安装、连接码配对、签名更新与失败回退。跨电脑网页直接拖放仍待实现和实测。';Files=$files}
+$release=[ordered]@{Schema=1;Product='OwnDesk';Version=$Version;Architecture='x64';Channel='stable';PackageUrl=$PackageUrl;Sha256=(Get-FileHash -LiteralPath $zipPath -Algorithm SHA256).Hash.ToLowerInvariant();Size=(Get-Item -LiteralPath $zipPath).Length;Notes=$Notes;Files=$files}
 $payload=[Text.Encoding]::UTF8.GetBytes(($release | ConvertTo-Json -Depth 8 -Compress))
 $entropy=[Text.Encoding]::UTF8.GetBytes('OwnDesk release signer v1')
 $clear=[Security.Cryptography.ProtectedData]::Unprotect([IO.File]::ReadAllBytes([IO.Path]::GetFullPath($PrivateKeyPath)),$entropy,[Security.Cryptography.DataProtectionScope]::CurrentUser)

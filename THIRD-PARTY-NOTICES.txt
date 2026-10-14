@@ -1,4 +1,4 @@
-OwnDesk / 巫妖远控 v0.2.0
+OwnDesk / 巫妖远控 v0.2.1
 
 RustDesk 1.5.0 (unmodified official executable)
   Project: https://github.com/rustdesk/rustdesk

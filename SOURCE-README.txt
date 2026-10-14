@@ -1,4 +1,4 @@
-OwnDesk / 巫妖远控 v0.2.0
+OwnDesk / 巫妖远控 v0.2.1
 
 Windows x64, .NET Framework 4.8+. C# WinForms; no NuGet dependencies.
 build.ps1 produces OwnDesk.exe and OwnDesk.Update.exe using the system csc.

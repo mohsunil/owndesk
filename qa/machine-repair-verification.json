@@ -1,0 +1,12 @@
+{
+  "Version": "0.2.1",
+  "CheckedAtUtc": "2026-10-14T09:21:05.5765713Z",
+  "InstallationSucceeded": true,
+  "HostPairingConfigured": true,
+  "HostSecretPresent": true,
+  "ServicesRunning": true,
+  "DirectListenerPresent": true,
+  "ExistingTailscaleReused": true,
+  "FreshTailscaleInstallationTested": false,
+  "RemoteSessionVerified": false
+}

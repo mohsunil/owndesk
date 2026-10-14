@@ -15,7 +15,7 @@ namespace OwnDesk
 {
     public static class AppInfo
     {
-        public const string Version = "0.2.0";
+        public const string Version = "0.2.1";
         public const string ProductTitle = "巫妖的远程魔导控制系统";
         public const string EngineVersion = "1.5.0";
         public const string EngineHash = "8555777215510d83d2d61c9dc984e4fcc838bd7e79f9d18a42585431f5e8bb47";
@@ -183,12 +183,24 @@ namespace OwnDesk
             {
                 using (var p = new Process())
                 {
+                    var timer = Stopwatch.StartNew();
+                    var capturedOutput = new StringBuilder(); var capturedError = new StringBuilder();
+                    var outputEnded = new TaskCompletionSource<bool>(); var errorEnded = new TaskCompletionSource<bool>();
+                    object captureLock = new object();
                     p.StartInfo = new ProcessStartInfo(executable, arguments) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true, StandardOutputEncoding = Encoding.UTF8, StandardErrorEncoding = Encoding.UTF8 };
+                    p.OutputDataReceived += delegate(object sender, DataReceivedEventArgs e) { if (e.Data == null) outputEnded.TrySetResult(true); else lock (captureLock) capturedOutput.AppendLine(e.Data); };
+                    p.ErrorDataReceived += delegate(object sender, DataReceivedEventArgs e) { if (e.Data == null) errorEnded.TrySetResult(true); else lock (captureLock) capturedError.AppendLine(e.Data); };
                     p.Start();
-                    var output = p.StandardOutput.ReadToEndAsync(); var error = p.StandardError.ReadToEndAsync();
-                    if (!p.WaitForExit(timeout)) { try { p.Kill(); } catch { } throw new TimeoutException("操作超时，请检查 Tailscale 是否正在运行。"); }
-                    Task.WaitAll(output, error);
-                    return new ProcessResult { Code = p.ExitCode, Output = output.Result, Error = error.Result };
+                    p.BeginOutputReadLine(); p.BeginErrorReadLine();
+                    try
+                    {
+                        if (!p.WaitForExit(timeout)) { try { p.Kill(); p.WaitForExit(1500); } catch { } throw new TimeoutException("组件命令执行超时，请重试当前步骤。"); }
+                        // A daemon can inherit the launcher's pipes. Its lifetime must not extend our deadline.
+                        int drain = (int)Math.Max(0, Math.Min(1000, timeout - timer.ElapsedMilliseconds));
+                        Task.WaitAll(new Task[] { outputEnded.Task, errorEnded.Task }, drain);
+                        lock (captureLock) return new ProcessResult { Code = p.ExitCode, Output = capturedOutput.ToString(), Error = capturedError.ToString() };
+                    }
+                    finally { try { p.CancelOutputRead(); } catch (InvalidOperationException) { } try { p.CancelErrorRead(); } catch (InvalidOperationException) { } }
                 }
             });
         }

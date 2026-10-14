@@ -127,6 +127,7 @@ namespace OwnDesk
             });
             test("Bundled official engine digest matches pinned release", () => new EngineManager(AppDomain.CurrentDomain.BaseDirectory).Verify());
             UpdateTests.Register(test, root);
+            ProcessRunnerTests.Register(test, root);
             object live;
             try { var client = new TailscaleClient(); var state = client.Status().GetAwaiter().GetResult(); live = new { installed = client.Executable != null, backend = state.Backend, ipv4Available = state.IPv4.Length > 0, peers = state.Peers.Count, windowsPeers = state.Peers.Count(x => string.Equals(x.OS, "windows", StringComparison.OrdinalIgnoreCase)) }; }
             catch (Exception ex) { live = new { error = ex.Message }; }

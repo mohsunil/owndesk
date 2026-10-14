@@ -1,0 +1,141 @@
+{
+  "product": "OwnDesk",
+  "version": "0.2.1",
+  "utc": "2026-10-14T09:03:44.3787185Z",
+  "passed": 26,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "Private IPv4 validation, CIDR boundaries and custom ports",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "Device persistence, editing and duplicate rejection",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "Import validates all records before modifying local devices",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "Corrupt device file remains intact for recovery",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "Export contains device metadata and no connection credentials",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "Tailscale peer parsing handles Windows, offline, null and IPv6 peers",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "TOML patches preserve unrelated security fields and tables",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "HD profile uses exact engine source keys, host whitelist and reversible backup",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "Restore refuses to overwrite configuration changed later",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "Backup journal cannot select arbitrary paths",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "TCP detection distinguishes listening and closed local test ports",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "Connection launch bypasses command shell and passes no password",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "Bundled official engine digest matches pinned release",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "Signed update verifies publisher key and detects altered payload/signature",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "Authenticated manifest still enforces product, version and file allowlist",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "Downloaded ZIP verifies digest and every extracted executable",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "ZIP traversal and undeclared files are rejected before escaping staging",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "Successful update preserves engine, device data and rollback backup",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "Interrupted file replacement restores all old files",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "Failed startup health check rolls back new files and additions",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "Update URLs reject insecure schemes, credentials and downgrade redirects",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "Pairing secrets are encrypted per Windows user and excluded from export",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "An interrupted own installation recovers pairing after its process exits without claiming unrelated services",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "A launcher exiting while its daemon inherits stdout cannot stall installation",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "Component timeouts terminate the waited process within a bounded interval",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "Concurrent component stdout and stderr are drained without pipe buffer deadlock",
+      "passed": true,
+      "error": ""
+    }
+  ],
+  "remoteSessionVerified": false,
+  "hdPerformanceVerified": false
+}

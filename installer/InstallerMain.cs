@@ -46,7 +46,9 @@ namespace OwnDesk
                 using (var form = new InstallForm(true)) { form.Show(); Application.DoEvents(); using (var bitmap = new Bitmap(form.Width, form.Height)) { form.DrawToBitmap(bitmap, new Rectangle(0, 0, form.Width, form.Height)); bitmap.Save(Path.GetFullPath(args[1])); } form.Close(); } return 0;
             }
             if (args.Length == 1 && args[0] == "--uninstall") { Application.Run(new UninstallForm()); return 0; }
-            Application.Run(new InstallForm(false)); return 0;
+            var installer = new InstallForm(false);
+            if (args.Length == 1 && args[0] == "--repair-now") installer.StartRepair();
+            Application.Run(installer); return 0;
         }
         public static async Task ExtractPayload(string root, Action<string> status)
         {
@@ -86,7 +88,8 @@ namespace OwnDesk
         readonly Label state;
         readonly ProgressBar progress;
         readonly Button install;
-        bool working, done;
+        bool working, done, stopRequested;
+        string activeJob;
         public InstallForm(bool preview)
         {
             this.preview = preview; Text = AppInfo.ProductTitle + " · 安装"; ClientSize = new Size(680, 530); FormBorderStyle = FormBorderStyle.FixedDialog; StartPosition = FormStartPosition.CenterScreen; MaximizeBox = false; Font = Style.Font(10, false); BackColor = Color.White; AutoScaleMode = AutoScaleMode.Dpi;
@@ -101,13 +104,20 @@ namespace OwnDesk
             Controls.Add(host); Controls.Add(autoStart);
             state = Style.Text(preview ? "安装界面预览 · 此图未执行系统安装" : "安装时可能需要一次 Windows 管理员许可。", 9, false, Style.Muted, 31, 411, 612, 28); Controls.Add(state);
             progress = new ProgressBar { Location = new Point(31, 449), Size = new Size(425, 27), Style = ProgressBarStyle.Continuous }; Controls.Add(progress);
-            install = Style.Button("安装", true, 476, 441, 172, 42); install.Click += async delegate { if (!preview) { if (done) { OpenManager(); Close(); } else await Install(); } }; Controls.Add(install);
-            FormClosing += delegate(object sender, FormClosingEventArgs e) { if (working) { e.Cancel = true; state.Text = "请等待当前安装步骤完成。"; } };
+            install = Style.Button("安装", true, 476, 441, 172, 42); install.Click += async delegate { if (!preview) { if (working) RequestStop(); else if (done) { OpenManager(); Close(); } else await Install(); } }; Controls.Add(install);
+            FormClosing += delegate(object sender, FormClosingEventArgs e) { if (working) { e.Cancel = true; RequestStop(); } };
+        }
+        public void StartRepair() { Shown += async delegate { await Install(); }; }
+        void RequestStop()
+        {
+            if (activeJob == null || stopRequested) return;
+            stopRequested = true; AppInfo.AtomicWrite(Path.Combine(activeJob, "cancel.request"), DateTime.UtcNow.ToString("o"));
+            state.Text = "正在停止安装，请等待当前系统步骤结束…"; install.Enabled = false;
         }
         void Status(string message) { if (InvokeRequired) BeginInvoke(new Action(() => state.Text = message)); else state.Text = message; }
         async Task Install()
         {
-            working = true; install.Enabled = false; host.Enabled = false; autoStart.Enabled = false; progress.Style = ProgressBarStyle.Marquee;
+            working = true; stopRequested = false; install.Enabled = true; install.Text = "停止安装"; host.Enabled = false; autoStart.Enabled = false; progress.Style = ProgressBarStyle.Marquee;
             try
             {
                 string root = InstallPaths.Root; Directory.CreateDirectory(root);
@@ -126,13 +136,24 @@ namespace OwnDesk
                         catch (System.ComponentModel.Win32Exception) { }
                     }
                 }
-                await InstallerProgram.ExtractPayload(root, Status);
-                Status("正在准备接入组件，Windows 将请求管理员许可…");
                 string job = Path.Combine(AppInfo.DataRoot, "setup", Guid.NewGuid().ToString("N")); Directory.CreateDirectory(job);
+                activeJob = job;
+                await InstallerProgram.ExtractPayload(Path.Combine(job, "payload"), Status);
+                if (stopRequested) throw new OperationCanceledException("安装已停止，可以重新点击安装。");
+                Status("正在等待 Windows 管理员许可，请确认弹出的窗口…");
                 string requestFile = Path.Combine(job, "request.json"), resultFile = Path.Combine(job, "result.json");
                 AppInfo.AtomicWrite(requestFile, AppInfo.Json().Serialize(new MachineSetupRequest { InstallRoot = root, UserSid = WindowsIdentity.GetCurrent().User.Value, ResultPath = resultFile, EnableHost = host.Checked }));
-                var helper = Process.Start(new ProcessStartInfo(Path.Combine(root, "OwnDesk.Update.exe"), "--setup-machine " + ProcessTools.Quote(requestFile)) { UseShellExecute = true, Verb = "runas", WindowStyle = ProcessWindowStyle.Hidden });
-                await Task.Run(() => helper.WaitForExit());
+                var helper = Process.Start(new ProcessStartInfo(Path.Combine(job, "payload", "OwnDesk.Update.exe"), "--setup-machine " + ProcessTools.Quote(requestFile)) { UseShellExecute = true, Verb = "runas", WindowStyle = ProcessWindowStyle.Hidden });
+                var elapsed = Stopwatch.StartNew();
+                using (helper)
+                {
+                    while (!await Task.Run(() => helper.WaitForExit(300)))
+                    {
+                        if (!stopRequested) try { string file = Path.Combine(job, "progress.json"); if (File.Exists(file)) { var update = AppInfo.Json().Deserialize<SetupRecovery.ProgressState>(File.ReadAllText(file)); if (update != null) Status(update.Message); } } catch (IOException) { }
+                        if (elapsed.Elapsed > TimeSpan.FromMinutes(10) && !stopRequested) RequestStop();
+                        if (elapsed.Elapsed > TimeSpan.FromMinutes(15)) throw new TimeoutException("安装超时，已请求停止。请保留此窗口信息以便修复。");
+                    }
+                }
                 if (!File.Exists(resultFile)) throw new IOException("接入组件配置未完成，请重新运行安装包并允许 Windows 管理员许可。");
                 var result = AppInfo.Json().Deserialize<MachineSetupResult>(File.ReadAllText(resultFile));
                 if (result == null || !result.Success) throw new IOException(result == null ? "安装结果无法确认。" : result.Message);
@@ -153,7 +174,7 @@ namespace OwnDesk
                 done = true; progress.Style = ProgressBarStyle.Continuous; progress.Value = 100; install.Text = "打开巫妖远控"; state.Text = result.RestartSuggested ? "安装完成；专网组件建议稍后重启电脑。" : result.Message;
             }
             catch (Exception ex) { state.Text = ex is System.ComponentModel.Win32Exception ? "Windows 管理员许可未完成，请允许后重试安装。" : ex.Message; install.Text = "重试安装"; progress.Style = ProgressBarStyle.Continuous; host.Enabled = true; autoStart.Enabled = true; }
-            finally { working = false; install.Enabled = true; }
+            finally { working = false; activeJob = null; install.Enabled = true; }
         }
         void OpenManager() { Process.Start(new ProcessStartInfo(Path.Combine(InstallPaths.Root, "OwnDesk.exe"), "--first-run") { UseShellExecute = false, WorkingDirectory = InstallPaths.Root }); }
     }

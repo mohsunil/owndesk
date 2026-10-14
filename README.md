@@ -1,5 +1,9 @@
 # 巫妖的远程魔导控制系统
 
+[下载 Windows 安装包](https://github.com/mohsunil/owndesk/releases/download/v0.2.0/OwnDesk-setup-0.2.0.exe) · [查看版本说明](https://github.com/mohsunil/owndesk/releases/tag/v0.2.0)
+
+下载文件名为 `OwnDesk-setup-0.2.0.exe`，安装界面和桌面快捷方式名称为“巫妖远控”。
+
 简称“巫妖远控”，内部产品名 OwnDesk。Windows 10 / 11 x64 家庭远控试用版，使用未修改的官方 RustDesk 引擎与 Tailscale 个人专网。
 
 在每台电脑运行发布页的 EXE 安装包，首次登录同一专网并用连接码配对，以后从设备列表连接。你和家人可以各自控制不同的电脑。软件免费；专网服务的个人免费方案以 Tailscale 当前规则为准。

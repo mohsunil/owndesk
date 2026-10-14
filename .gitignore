@@ -1,0 +1,10 @@
+bin/
+obj/
+out/
+build/
+*.dpapi
+*private-key*
+devices.json
+host-secret*
+host-ready.json
+auth/

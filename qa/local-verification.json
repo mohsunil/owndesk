@@ -1,0 +1,177 @@
+{
+  "Product": "巫妖的远程魔导控制系统",
+  "InternalProduct": "OwnDesk",
+  "Version": "0.2.0",
+  "BuiltAtUtc": "2026-10-14T06:10:09.7918537Z",
+  "Platform": "Windows 10/11 x64, .NET Framework 4.8+",
+  "AutomatedChecks": {
+    "Checks": [
+      {
+        "name": "Private IPv4 validation, CIDR boundaries and custom ports",
+        "passed": true,
+        "error": ""
+      },
+      {
+        "name": "Device persistence, editing and duplicate rejection",
+        "passed": true,
+        "error": ""
+      },
+      {
+        "name": "Import validates all records before modifying local devices",
+        "passed": true,
+        "error": ""
+      },
+      {
+        "name": "Corrupt device file remains intact for recovery",
+        "passed": true,
+        "error": ""
+      },
+      {
+        "name": "Export contains device metadata and no connection credentials",
+        "passed": true,
+        "error": ""
+      },
+      {
+        "name": "Tailscale peer parsing handles Windows, offline, null and IPv6 peers",
+        "passed": true,
+        "error": ""
+      },
+      {
+        "name": "TOML patches preserve unrelated security fields and tables",
+        "passed": true,
+        "error": ""
+      },
+      {
+        "name": "HD profile uses exact engine source keys, host whitelist and reversible backup",
+        "passed": true,
+        "error": ""
+      },
+      {
+        "name": "Restore refuses to overwrite configuration changed later",
+        "passed": true,
+        "error": ""
+      },
+      {
+        "name": "Backup journal cannot select arbitrary paths",
+        "passed": true,
+        "error": ""
+      },
+      {
+        "name": "TCP detection distinguishes listening and closed local test ports",
+        "passed": true,
+        "error": ""
+      },
+      {
+        "name": "Connection launch bypasses command shell and passes no password",
+        "passed": true,
+        "error": ""
+      },
+      {
+        "name": "Bundled official engine digest matches pinned release",
+        "passed": true,
+        "error": ""
+      },
+      {
+        "name": "Signed update verifies publisher key and detects altered payload/signature",
+        "passed": true,
+        "error": ""
+      },
+      {
+        "name": "Authenticated manifest still enforces product, version and file allowlist",
+        "passed": true,
+        "error": ""
+      },
+      {
+        "name": "Downloaded ZIP verifies digest and every extracted executable",
+        "passed": true,
+        "error": ""
+      },
+      {
+        "name": "ZIP traversal and undeclared files are rejected before escaping staging",
+        "passed": true,
+        "error": ""
+      },
+      {
+        "name": "Successful update preserves engine, device data and rollback backup",
+        "passed": true,
+        "error": ""
+      },
+      {
+        "name": "Interrupted file replacement restores all old files",
+        "passed": true,
+        "error": ""
+      },
+      {
+        "name": "Failed startup health check rolls back new files and additions",
+        "passed": true,
+        "error": ""
+      },
+      {
+        "name": "Update URLs reject insecure schemes, credentials and downgrade redirects",
+        "passed": true,
+        "error": ""
+      },
+      {
+        "name": "Pairing secrets are encrypted per Windows user and excluded from export",
+        "passed": true,
+        "error": ""
+      }
+    ],
+    "Passed": 22,
+    "Failed": 0
+  },
+  "Engine": {
+    "SHA256": "8555777215510d83d2d61c9dc984e4fcc838bd7e79f9d18a42585431f5e8bb47",
+    "SignatureStatus": "Valid",
+    "Publisher": "CN=PURSLANE, O=PURSLANE, S=North West, C=SG, OID.2.5.4.15=Business Entity, OID.1.3.6.1.4.1.311.60.2.1.3=SG, SERIALNUMBER=53481265A",
+    "FileBytes": 25887600,
+    "Version": "1.5.0"
+  },
+  "TailscaleInstaller": {
+    "Version": "1.102.2",
+    "Bytes": 38354432,
+    "Sha256": "d2eb69e103b08a5b77de9d7cb8555541aa99f7dfc6048850b2286a1048c885f9",
+    "Signature": "Valid",
+    "Publisher": "CN=Tailscale Inc., O=Tailscale Inc., L=Toronto, S=Ontario, C=CA, SERIALNUMBER=1131559-5, OID.2.5.4.15=Private Organization, OID.1.3.6.1.4.1.311.60.2.1.3=CA",
+    "Source": "https://pkgs.tailscale.com/stable/tailscale-setup-1.102.2-amd64.msi"
+  },
+  "ManagerSha256": "4ae06e6c6b52ea0acea78420ab46044e2d5ff0c0f1ef05fe60598dfce3145936",
+  "UpdaterSha256": "74503b20622e9f18bbbfcf0b6cde44eea3ed0e8ae525b03bf9932acc8f2ac99c",
+  "VisualInspection": {
+    "Devices": true,
+    "SampleDataOnly": true,
+    "Updates": true,
+    "QualityHelp": true,
+    "HostSetup": true
+  },
+  "UpdateHelperEndToEnd": {
+    "Passed": true,
+    "From": "0.1.0",
+    "To": "0.2.0",
+    "ProductionSignatureVerified": true,
+    "ActualHelperProcessExitCode": 0,
+    "NewManagerStarted": true,
+    "StartupHealthAcknowledged": true,
+    "OldManagerBackupVerified": true,
+    "EnginePreserved": true,
+    "DeviceDataPreserved": true,
+    "SystemSetupExecuted": false,
+    "RemoteConnectionOpened": false,
+    "CheckedAtUtc": "2026-10-14T05:55:08.4578716Z"
+  },
+  "OnlineFeedVerifiedAtPackageBuild": false,
+  "OnlineVerificationRecord": "See release asset online-verification.json",
+  "SystemComponentsInstallVerified": false,
+  "VPNCompatibilityVerified": false,
+  "TwoPersonRemoteSessionVerified": false,
+  "HDPerformanceVerified": false,
+  "ScreenshotDirectRemoteBrowserDropImplemented": false,
+  "IndependentSecurityAudit": false,
+  "CommercialAuthenticodeSignature": false,
+  "Notes": [
+    "更新/回退检查在隔离目录使用测试数据进行。",
+    "本版单文件安装器会在用户允许 Windows 管理员提示后配置组件。",
+    "此记录为打包时的本地检查；公开更新源下载校验见发布页的 online-verification.json。",
+    "现成引擎的图片剪贴板不等于跨电脑网页拖放。"
+  ]
+}

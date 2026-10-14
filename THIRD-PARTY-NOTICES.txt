@@ -1,0 +1,28 @@
+OwnDesk / 巫妖远控 v0.2.0
+
+RustDesk 1.5.0 (unmodified official executable)
+  Project: https://github.com/rustdesk/rustdesk
+  Release: https://github.com/rustdesk/rustdesk/releases/tag/1.5.0
+  Asset: rustdesk-1.5.0-x86_64.exe, renamed to engine/rustdesk.exe only
+  SHA256: 8555777215510d83d2d61c9dc984e4fcc838bd7e79f9d18a42585431f5e8bb47
+  Local signature verification: valid, PURSLANE (Singapore)
+  License: GNU AGPLv3, included in licenses/LICENSE-RustDesk-AGPL-3.0.txt
+  Corresponding source: source/upstream/rustdesk-1.5.0-source.zip
+  Submodule source: source/upstream/hbb_common-229b904-source.zip
+  Exact hbb_common commit: 229b904508364c8997aad0fb5af57effac859f60
+  Copyrights retained in upstream archives. Native engine branding remains.
+
+Tailscale (first-install download, not bundled)
+  https://tailscale.com/ and https://tailscale.com/pricing
+  Official amd64 MSI version 1.102.2:
+  https://pkgs.tailscale.com/stable/tailscale-setup-1.102.2-amd64.msi
+  SHA256: d2eb69e103b08a5b77de9d7cb8555541aa99f7dfc6048850b2286a1048c885f9
+  Local signature verification: valid, Tailscale Inc.
+  Installation and authentication use Tailscale's applicable terms and UI.
+  OwnDesk does not capture or retain Tailscale account tokens.
+
+OwnDesk source: MIT, see licenses/LICENSE-OwnDesk.txt.
+Windows and .NET Framework are system-provided, not redistributed.
+Installer and manager currently do not carry commercial Authenticode signatures.
+The signed update feed is a separate publisher-key mechanism.
+Not affiliated with ToDesk, RustDesk, Tailscale or Microsoft.

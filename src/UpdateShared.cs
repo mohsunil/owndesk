@@ -176,7 +176,13 @@ namespace OwnDesk
         public static UpdateSettings Load(string dataRoot)
         {
             string path = Path.Combine(dataRoot, "updates", "settings.json");
-            try { return File.Exists(path) ? AppInfo.Json().Deserialize<UpdateSettings>(File.ReadAllText(path)) ?? new UpdateSettings() : new UpdateSettings(); }
+            try
+            {
+                var settings = File.Exists(path) ? AppInfo.Json().Deserialize<UpdateSettings>(File.ReadAllText(path)) ?? new UpdateSettings() : new UpdateSettings();
+                if ((settings.LastResult ?? "").StartsWith("已是最新版本 v", StringComparison.Ordinal) && settings.LastResult != "已是最新版本 v" + AppInfo.Version)
+                    settings.LastResult = "当前已安装 v" + AppInfo.Version + "，请检查更新。";
+                return settings;
+            }
             catch { return new UpdateSettings(); }
         }
         public void Save(string dataRoot) { AppInfo.AtomicWrite(Path.Combine(dataRoot, "updates", "settings.json"), AppInfo.Json().Serialize(this)); }

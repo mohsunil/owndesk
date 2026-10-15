@@ -62,6 +62,32 @@ namespace OwnDesk
                 var renamed = new DeviceStore(store.Root).Data.Devices.Single();
                 Assert(renamed.Name == "家里台式机" && renamed.Id == original.Id && renamed.Address == original.Address && renamed.ProtectedSecret == original.ProtectedSecret && renamed.LastOpenedUtc == original.LastOpenedUtc, "Only display name changes");
             });
+            test("Automatic discovery merges online Windows peers and preserves names, pairing and exclusions", () =>
+            {
+                string dir = Path.Combine(root, "automatic-discovery"); Directory.CreateDirectory(dir);
+                File.WriteAllText(Path.Combine(dir, "devices.json"), "{\"Schema\":1,\"Profile\":\"office\",\"Devices\":[]}");
+                var store = new DeviceStore(dir); Assert(store.Data.AutoDiscover, "Old device files enable discovery by default");
+                var saved = new Device { Name = "家里台式机", Address = "100.70.1.2", ProtectedSecret = SecretStore.Protect("FixtureSecret_123456789") }; store.Upsert(saved);
+                var state = new TailState { Backend = "Running", IPv4 = "100.70.1.1", Peers = new List<TailPeer> {
+                    new TailPeer { Name = "Self", Address = "100.70.1.1", OS = "windows", Online = true },
+                    new TailPeer { Name = "System name", Address = saved.Address, OS = "windows", Online = true },
+                    new TailPeer { Name = "老婆笔记本", Address = "100.70.1.3", OS = "windows", Online = true },
+                    new TailPeer { Name = "Old offline PC", Address = "100.70.1.4", OS = "windows", Online = false },
+                    new TailPeer { Name = "Phone", Address = "100.70.1.5", OS = "android", Online = true },
+                    new TailPeer { Name = "External", Address = "8.8.8.8", OS = "windows", Online = true } } };
+                Assert(store.DiscoverOnline(state) == 1, "Only new online Windows peer added");
+                var known = store.Data.Devices.Single(x => x.Id == saved.Id);
+                Assert(known.Name == saved.Name && known.ProtectedSecret == saved.ProtectedSecret, "Nickname and credentials preserved");
+                Assert(string.IsNullOrEmpty(store.Data.Devices.Single(x => x.Address == "100.70.1.3").ProtectedSecret), "Discovery grants no control credentials");
+                string file = Path.Combine(store.Root, "devices.json"); string hash = AppInfo.FileHash(file);
+                Assert(store.DiscoverOnline(state) == 0 && AppInfo.FileHash(file) == hash, "Repeated refresh does not rewrite data");
+                var discovered = store.Data.Devices.Single(x => x.Address == "100.70.1.3"); store.Remove(discovered.Id);
+                Assert(new DeviceStore(store.Root).DiscoverOnline(state) == 0, "Removed peer stays hidden after restart");
+                store.Upsert(discovered); Assert(!store.Data.HiddenAutoAddresses.Contains(discovered.Address), "Explicit add unhides peer");
+                var next = store.Clone(); next.AutoDiscover = false; store.Commit(next);
+                state.Peers.Add(new TailPeer { Name = "Extra PC", Address = "100.70.1.6", OS = "windows", Online = true });
+                Assert(new DeviceStore(store.Root).DiscoverOnline(state) == 0, "Discovery preference persists");
+            });
             test("Import validates all records before modifying local devices", () =>
             {
                 var store = new DeviceStore(Path.Combine(root, "imports")); store.Upsert(new Device { Name = "Existing", Address = "100.70.20.20" });

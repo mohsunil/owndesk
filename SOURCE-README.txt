@@ -1,4 +1,4 @@
-OwnDesk / 巫妖远控 v0.2.2
+OwnDesk / 巫妖远控 v0.2.3
 
 Windows x64, .NET Framework 4.8+. C# WinForms; no NuGet dependencies.
 build.ps1 produces OwnDesk.exe and OwnDesk.Update.exe using the system csc.
@@ -54,4 +54,5 @@ Default program root: %LOCALAPPDATA%\Programs\OwnDesk
 No independent security audit or commercial Authenticode certificate is claimed.
 Actual system setup, VPN coexistence, two-person remote sessions and reboot
 access require validation on the intended computers.
+
 

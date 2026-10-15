@@ -216,7 +216,7 @@ namespace OwnDesk
             local.Controls.Add(copy); local.Controls.Add(prepare);
             var name = Style.Button("给本机起名", false, 820, 80, 124, 32); name.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             name.Click += delegate { RenameComputer(null); }; local.Controls.Add(name);
-            var toolbar = new Panel { Dock = DockStyle.Top, Size = new Size(966, 79) };
+            var toolbar = new Panel { Dock = DockStyle.Top, Size = new Size(966, 105) };
             deviceCount = Style.Text("已保存 0 台电脑", 13, true, Style.Ink, 0, 31, 270, 30); toolbar.Controls.Add(deviceCount);
             var add = Style.Button("+ 配对电脑", true, 806, 23, 137, 37); add.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             add.Click += delegate { PairDevice(); };
@@ -225,6 +225,9 @@ namespace OwnDesk
             var refresh = Style.Button("刷新", false, 565, 23, 77, 37); refresh.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             refresh.Click += async delegate { await RefreshNetwork(); };
             toolbar.Controls.Add(add); toolbar.Controls.Add(discover); toolbar.Controls.Add(refresh);
+            var automatic = new CheckBox { Text = "自动发现同一专网的在线电脑", Location = new Point(2, 73), Size = new Size(390, 24), Checked = store.Data.AutoDiscover, Font = Style.Font(9, false), ForeColor = Style.Muted };
+            automatic.CheckedChanged += delegate { Guard(() => { var next = store.Clone(); next.AutoDiscover = automatic.Checked; store.Commit(next); if (automatic.Checked) store.DiscoverOnline(state); RenderDevices(); }); };
+            toolbar.Controls.Add(automatic);
             var grid = new Panel { Dock = DockStyle.Fill };
             cards = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoScroll = true, WrapContents = true, Padding = new Padding(0), BackColor = Style.Paper };
             cards.SizeChanged += delegate { ResizeCards(); };
@@ -249,9 +252,10 @@ namespace OwnDesk
         {
             if (cards == null || cards.IsDisposed) return;
             cards.SuspendLayout(); Style.DisposeChildren(cards);
-            foreach (var device in store.Data.Devices) cards.Controls.Add(DeviceCard(device));
-            deviceCount.Text = "已保存 " + store.Data.Devices.Count + " 台电脑";
-            empty.Visible = store.Data.Devices.Count == 0; cards.Visible = !empty.Visible;
+            var visible = store.Data.Devices.Where(x => !state.Ready || Endpoint.Parse(x.Address).Host != state.IPv4).ToList();
+            foreach (var device in visible) cards.Controls.Add(DeviceCard(device));
+            deviceCount.Text = "可查看 " + visible.Count + " 台电脑";
+            empty.Visible = visible.Count == 0; cards.Visible = !empty.Visible;
             ResizeCards(); cards.ResumeLayout();
         }
         Control DeviceCard(Device device)
@@ -268,6 +272,7 @@ namespace OwnDesk
                 var peer = state.Peers.FirstOrDefault(x => x.Address == Endpoint.Parse(device.Address).Host);
                 status = peer == null ? "远控端口尚未检测" : peer.Online ? "专网在线 · 远控尚未检测" : "专网离线 · 可稍后检测";
             }
+            if (string.IsNullOrEmpty(device.ProtectedSecret) && !status.Contains("\n")) status += "\n首次控制需连接码配对或远端验证";
             card.Controls.Add(Style.Text(status, 8.8f, false, status.Contains("端口可达") ? Style.Green : Style.Muted, 22, 99, 405, 44));
             var connect = Style.Button("连接桌面", true, 22, 155, 136, 35); connect.Click += async delegate { await Connect(device, false); };
             var test = Style.Button(testing.Contains(device.Id) ? "检测中…" : "检测连接", false, 171, 155, 100, 35); test.Enabled = !testing.Contains(device.Id); test.Click += async delegate { await Test(device); };
@@ -319,7 +324,7 @@ namespace OwnDesk
             using (var dialog = new DiscoveryDialog(state, store.Data.Devices)) if (dialog.ShowDialog(this) == DialogResult.OK) Guard(() =>
             {
                 var next = store.Clone();
-                foreach (var p in dialog.Selected) next.Devices.Add(new Device { Name = string.IsNullOrWhiteSpace(p.Name) ? p.Address : p.Name.Substring(0, Math.Min(p.Name.Length, 48)), Address = p.Address });
+                foreach (var p in dialog.Selected) { next.Devices.Add(new Device { Name = string.IsNullOrWhiteSpace(p.Name) ? p.Address : p.Name.Substring(0, Math.Min(p.Name.Length, 48)), Address = p.Address }); next.HiddenAutoAddresses.RemoveAll(x => x == p.Address); }
                 store.Commit(next); RenderDevices(); Say("已加入 " + dialog.Selected.Count + " 台电脑。");
             });
         }
@@ -331,7 +336,10 @@ namespace OwnDesk
         }
         async Task ReadNetwork()
         {
-            var current = await tailscale.Status(); if (IsDisposed) return; state = current; UpdateNetwork();
+            var current = await tailscale.Status(); if (IsDisposed) return; state = current;
+            try { int added = store.DiscoverOnline(state); if (added > 0) Say("自动发现 " + added + " 台电脑；首次控制请用对方连接码配对。"); }
+            catch (Exception ex) { Say("自动发现未保存：" + ex.Message); }
+            UpdateNetwork();
         }
         void UpdateNetwork()
         {

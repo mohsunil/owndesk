@@ -1,8 +1,8 @@
 {
   "product": "OwnDesk",
-  "version": "0.2.2",
-  "utc": "2026-10-15T02:04:24.5894858Z",
-  "passed": 28,
+  "version": "0.2.3",
+  "utc": "2026-10-15T02:22:01.8372686Z",
+  "passed": 29,
   "failed": 0,
   "checks": [
     {
@@ -22,6 +22,11 @@
     },
     {
       "name": "Renaming a saved computer preserves pairing credentials, address and history",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "Automatic discovery merges online Windows peers and preserves names, pairing and exclusions",
       "passed": true,
       "error": ""
     },

@@ -15,7 +15,7 @@ namespace OwnDesk
 {
     public static class AppInfo
     {
-        public const string Version = "0.2.2";
+        public const string Version = "0.2.3";
         public const string ProductTitle = "巫妖的远程魔导控制系统";
         public const string EngineVersion = "1.5.0";
         public const string EngineHash = "8555777215510d83d2d61c9dc984e4fcc838bd7e79f9d18a42585431f5e8bb47";
@@ -88,7 +88,9 @@ namespace OwnDesk
         public int Schema { get; set; }
         public string Profile { get; set; }
         public List<Device> Devices { get; set; }
-        public DeviceFile() { Schema = 1; Profile = "office"; Devices = new List<Device>(); }
+        public bool AutoDiscover { get; set; }
+        public List<string> HiddenAutoAddresses { get; set; }
+        public DeviceFile() { Schema = 1; Profile = "office"; Devices = new List<Device>(); AutoDiscover = true; HiddenAutoAddresses = new List<string>(); }
     }
     public sealed class DeviceStore
     {
@@ -108,6 +110,9 @@ namespace OwnDesk
             if (new FileInfo(path).Length > 256 * 1024) throw new ArgumentException("设备列表超过 256 KB。");
             DeviceFile data = AppInfo.Json().Deserialize<DeviceFile>(File.ReadAllText(path, Encoding.UTF8));
             if (data == null || data.Schema != 1 || data.Devices == null || data.Devices.Count > 128) throw new ArgumentException("设备列表格式不正确或版本不受支持。");
+            if (data.HiddenAutoAddresses == null) data.HiddenAutoAddresses = new List<string>();
+            if (data.HiddenAutoAddresses.Count > 128) throw new ArgumentException("隐藏列表超过限制。");
+            data.HiddenAutoAddresses = data.HiddenAutoAddresses.Select(x => Endpoint.Parse(x).Address).Distinct().ToList();
             var addresses = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var ids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var d in data.Devices)
@@ -130,15 +135,36 @@ namespace OwnDesk
             AppInfo.AtomicWrite(target, AppInfo.Json().Serialize(next));
             Data = next;
         }
-        public DeviceFile Clone() { return new DeviceFile { Profile = Data.Profile, Devices = Data.Devices.Select(x => x.Copy()).ToList() }; }
+        public DeviceFile Clone() { return new DeviceFile { Profile = Data.Profile, AutoDiscover = Data.AutoDiscover, HiddenAutoAddresses = Data.HiddenAutoAddresses.ToList(), Devices = Data.Devices.Select(x => x.Copy()).ToList() }; }
         public void Upsert(Device device)
         {
             device.Validate(); var next = Clone();
             int index = next.Devices.FindIndex(x => x.Id == device.Id);
             if (index >= 0) next.Devices[index] = device.Copy(); else next.Devices.Add(device.Copy());
+            next.HiddenAutoAddresses.RemoveAll(x => x == device.Address);
             Commit(next);
         }
-        public void Remove(string id) { var next = Clone(); next.Devices.RemoveAll(x => x.Id == id); Commit(next); }
+        public void Remove(string id)
+        {
+            var next = Clone(); var removed = next.Devices.FirstOrDefault(x => x.Id == id);
+            if (removed != null && !next.HiddenAutoAddresses.Contains(removed.Address) && next.HiddenAutoAddresses.Count < 128) next.HiddenAutoAddresses.Add(removed.Address);
+            next.Devices.RemoveAll(x => x.Id == id); Commit(next);
+        }
+        public int DiscoverOnline(TailState state)
+        {
+            if (!Data.AutoDiscover || !state.Ready) return 0;
+            var next = Clone(); int added = 0;
+            foreach (var peer in state.Peers.Where(x => x != null && x.Online && string.Equals(x.OS, "windows", StringComparison.OrdinalIgnoreCase)))
+            {
+                Endpoint endpoint; try { endpoint = Endpoint.Parse(peer.Address); } catch (ArgumentException) { continue; }
+                if (!endpoint.IsTailnet || endpoint.Host == state.IPv4 || next.HiddenAutoAddresses.Contains(endpoint.Address) || next.Devices.Any(x => x.Address == endpoint.Address) || next.Devices.Count >= 128) continue;
+                string name = new string((peer.Name ?? "").Where(x => !char.IsControl(x)).ToArray()).Trim();
+                if (name.Length == 0) name = endpoint.Host; if (name.Length > 48) name = name.Substring(0, 48);
+                next.Devices.Add(new Device { Name = name, Address = endpoint.Address }); added++;
+            }
+            if (added > 0) Commit(next);
+            return added;
+        }
         public int Import(string path)
         {
             var incoming = Read(path); var next = Clone(); int added = 0;

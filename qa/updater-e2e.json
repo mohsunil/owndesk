@@ -1,7 +1,7 @@
 {
   "Passed": true,
-  "From": "0.2.1",
-  "To": "0.2.2",
+  "From": "0.2.2",
+  "To": "0.2.3",
   "ProductionSignatureVerified": true,
   "ActualInstalledManagerUpdated": true,
   "StartupHealthAcknowledged": true,
@@ -9,6 +9,7 @@
   "EnginePreserved": true,
   "DeviceDataAndHostCredentialsPreserved": true,
   "ServicesRunning": true,
+  "AutoDiscoveredAddedCount": 1,
   "FreshSystemComponentInstallationTested": false,
-  "CheckedAtUtc": "2026-10-15T02:06:06.8785958Z"
+  "CheckedAtUtc": "2026-10-15T02:22:28.3508463Z"
 }

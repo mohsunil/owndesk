@@ -6,6 +6,25 @@ using System.Windows.Forms;
 
 namespace OwnDesk
 {
+    public sealed class NameDialog : Form
+    {
+        public string Result { get; private set; }
+        public NameDialog(string name, bool local)
+        {
+            Text = local ? "给本机起名" : "修改电脑名称";
+            ClientSize = new Size(460, 230); StartPosition = FormStartPosition.CenterParent;
+            FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false; MinimizeBox = false;
+            BackColor = Color.White; Font = Style.Font(10, false); AutoScaleMode = AutoScaleMode.Dpi;
+            Controls.Add(Style.Text("电脑名称", 12, true, Style.Ink, 25, 22, 400, 30));
+            var input = new TextBox { Location = new Point(28, 63), Size = new Size(402, 28), MaxLength = 48, Text = name }; Controls.Add(input);
+            Controls.Add(Style.Text(local ? "例如：老婆笔记本、家里台式机。\n新复制的连接码会带上这个名字。" : "例如：老婆笔记本、家里台式机。\n保存在这份设备列表中，方便下次识别。", 9, false, Style.Muted, 27, 107, 405, 50));
+            var save = Style.Button("保存名称", true, 305, 177, 125, 36);
+            save.Click += delegate { try { Result = DeviceNames.Validate(input.Text); DialogResult = DialogResult.OK; } catch (Exception ex) { MessageBox.Show(this, ex.Message, "检查名称", MessageBoxButtons.OK, MessageBoxIcon.Information); } };
+            var cancel = Style.Button("取消", false, 205, 177, 88, 36); cancel.DialogResult = DialogResult.Cancel;
+            Controls.Add(save); Controls.Add(cancel); AcceptButton = save; CancelButton = cancel;
+            Shown += delegate { input.Focus(); input.SelectAll(); };
+        }
+    }
     public sealed class ActivityTracker : IMessageFilter
     {
         readonly Form owner; readonly Action tick;

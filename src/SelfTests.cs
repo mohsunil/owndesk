@@ -43,6 +43,25 @@ namespace OwnDesk
                 Assert(store.Data.Devices.Count == 1, "Duplicate unchanged");
                 store.Remove(device.Id); Assert(new DeviceStore(store.Root).Data.Devices.Count == 0, "Removal saved");
             });
+            test("Local names persist and travel in pairing codes without changing device identity", () =>
+            {
+                string dir = Path.Combine(root, "local-name");
+                Assert(DeviceNames.Local(dir) == Environment.MachineName, "Old installations retain default name");
+                DeviceNames.SaveLocal(dir, "  老婆笔记本  ");
+                Assert(DeviceNames.Local(dir) == "老婆笔记本", "Chinese name saved and trimmed");
+                var paired = PairCode.Read(PairCode.Create(DeviceNames.Local(dir), "100.70.1.2", "FixtureSecret_123456789"));
+                Assert(paired.Name == "老婆笔记本" && paired.Address == "100.70.1.2", "Pairing carries friendly name and original address");
+                foreach (string bad in new[] { "", "  ", new string('x', 49), "name\nline" }) Reject(() => DeviceNames.SaveLocal(dir, bad));
+                Assert(DeviceNames.Local(dir) == "老婆笔记本", "Rejected rename preserves saved name");
+            });
+            test("Renaming a saved computer preserves pairing credentials, address and history", () =>
+            {
+                var store = new DeviceStore(Path.Combine(root, "rename"));
+                var original = new Device { Name = "Old name", Address = "100.70.1.3", ProtectedSecret = SecretStore.Protect("FixtureSecret_123456789"), LastOpenedUtc = "2026-01-01T00:00:00Z" };
+                store.Upsert(original); DeviceNames.Rename(store, original, "家里台式机");
+                var renamed = new DeviceStore(store.Root).Data.Devices.Single();
+                Assert(renamed.Name == "家里台式机" && renamed.Id == original.Id && renamed.Address == original.Address && renamed.ProtectedSecret == original.ProtectedSecret && renamed.LastOpenedUtc == original.LastOpenedUtc, "Only display name changes");
+            });
             test("Import validates all records before modifying local devices", () =>
             {
                 var store = new DeviceStore(Path.Combine(root, "imports")); store.Upsert(new Device { Name = "Existing", Address = "100.70.20.20" });

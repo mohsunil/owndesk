@@ -1,4 +1,4 @@
-OwnDesk / 巫妖远控 v0.2.1
+OwnDesk / 巫妖远控 v0.2.2
 
 Windows x64, .NET Framework 4.8+. C# WinForms; no NuGet dependencies.
 build.ps1 produces OwnDesk.exe and OwnDesk.Update.exe using the system csc.
@@ -13,7 +13,7 @@ commit 229b904508364c8997aad0fb5af57effac859f60. Upstream build instructions:
 https://rustdesk.com/docs/en/dev/build/windows/
 
 Installer machine setup requests a visible Windows administrator permission.
-The official Tailscale MSI is downloaded only when required, over HTTPS with
+The official Tailscale MSI is bundled in dependencies/tailscale.msi with
 a pinned SHA256. New hosts get a random permanent RustDesk credential;
 existing hosts retain their original credential. Changed host options are
 backed up for removal. OwnDesk user data remains outside the install directory.
@@ -54,3 +54,4 @@ Default program root: %LOCALAPPDATA%\Programs\OwnDesk
 No independent security audit or commercial Authenticode certificate is claimed.
 Actual system setup, VPN coexistence, two-person remote sessions and reboot
 access require validation on the intended computers.
+

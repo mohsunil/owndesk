@@ -1,15 +1,14 @@
 {
   "Passed": true,
-  "From": "0.2.0",
-  "To": "0.2.1",
+  "From": "0.2.1",
+  "To": "0.2.2",
   "ProductionSignatureVerified": true,
-  "ActualHelperProcessExitCode": 0,
-  "NewManagerStarted": true,
+  "ActualInstalledManagerUpdated": true,
   "StartupHealthAcknowledged": true,
   "OldManagerBackupVerified": true,
   "EnginePreserved": true,
-  "DeviceDataPreserved": true,
-  "SystemSetupExecuted": false,
-  "RemoteConnectionOpened": false,
-  "CheckedAtUtc": "2026-10-14T09:08:27.2505877Z"
+  "DeviceDataAndHostCredentialsPreserved": true,
+  "ServicesRunning": true,
+  "FreshSystemComponentInstallationTested": false,
+  "CheckedAtUtc": "2026-10-15T02:06:06.8785958Z"
 }

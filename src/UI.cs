@@ -214,6 +214,8 @@ namespace OwnDesk
             var copy = Style.Button("复制连接码", false, 685, 31, 120, 38); copy.Anchor = AnchorStyles.Top | AnchorStyles.Right; copy.Click += delegate { CopyPair(); };
             var prepare = Style.Button("设置本机接入", true, 820, 31, 124, 38); prepare.Anchor = AnchorStyles.Top | AnchorStyles.Right; prepare.Click += delegate { SelectPage(1); };
             local.Controls.Add(copy); local.Controls.Add(prepare);
+            var name = Style.Button("给本机起名", false, 820, 80, 124, 32); name.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            name.Click += delegate { RenameComputer(null); }; local.Controls.Add(name);
             var toolbar = new Panel { Dock = DockStyle.Top, Size = new Size(966, 79) };
             deviceCount = Style.Text("已保存 0 台电脑", 13, true, Style.Ink, 0, 31, 270, 30); toolbar.Controls.Add(deviceCount);
             var add = Style.Button("+ 配对电脑", true, 806, 23, 137, 37); add.Anchor = AnchorStyles.Top | AnchorStyles.Right;
@@ -256,7 +258,9 @@ namespace OwnDesk
         {
             var card = new Surface { Size = new Size(450, 208), Margin = new Padding(0, 0, 12, 15) };
             var icon = new ScreenMark { Location = new Point(15, 18) }; card.Controls.Add(icon);
-            card.Controls.Add(Style.Text(device.Name, 13, true, Style.Ink, 76, 21, 250, 29));
+            var nameLabel = Style.Text(device.Name, 13, true, Style.Ink, 76, 21, card.Width - 170, 29); nameLabel.Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right; card.Controls.Add(nameLabel);
+            var rename = Style.Button("改名", false, card.Width - 85, 20, 65, 31); rename.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            rename.Click += delegate { RenameComputer(device); }; card.Controls.Add(rename);
             card.Controls.Add(Style.Text(device.Address, 9.5f, false, Style.Muted, 78, 55, 290, 23));
             string status;
             if (!statuses.TryGetValue(device.Id, out status))
@@ -278,6 +282,16 @@ namespace OwnDesk
             card.Disposed += delegate { menu.Dispose(); }; card.Controls.Add(connect); card.Controls.Add(test); card.Controls.Add(more);
             return card;
         }
+        void RenameComputer(Device device)
+        {
+            if (preview) return;
+            using (var dialog = new NameDialog(device == null ? DeviceNames.Local(store.Root) : device.Name, device == null))
+                if (dialog.ShowDialog(this) == DialogResult.OK) Guard(() =>
+                {
+                    if (device == null) { DeviceNames.SaveLocal(store.Root, dialog.Result); UpdateNetwork(); Say("本机名称已保存，新复制的连接码会使用这个名字。已有设备列表可点「改名」修改。"); }
+                    else { DeviceNames.Rename(store, device, dialog.Result); RenderDevices(); Say("名称已保存。"); }
+                });
+        }
         void AddDevice(Device existing)
         {
             if (preview) return;
@@ -291,11 +305,11 @@ namespace OwnDesk
         void PairDevice()
         {
             if (preview) return;
-            using (var dialog = new PairDialog()) if (dialog.ShowDialog(this) == DialogResult.OK) Guard(() => { if (Endpoint.Parse(dialog.Result.Address).Host == state.IPv4) throw new ArgumentException("请使用另一台电脑的连接码。"); var known = store.Data.Devices.FirstOrDefault(x => x.Address == dialog.Result.Address); if (known != null) dialog.Result.Id = known.Id; store.Upsert(dialog.Result); RenderDevices(); Say("配对已保存，以后点「连接桌面」即可。"); });
+            using (var dialog = new PairDialog()) if (dialog.ShowDialog(this) == DialogResult.OK) Guard(() => { if (Endpoint.Parse(dialog.Result.Address).Host == state.IPv4) throw new ArgumentException("请使用另一台电脑的连接码。"); var known = store.Data.Devices.FirstOrDefault(x => x.Address == dialog.Result.Address); if (known != null) { dialog.Result.Id = known.Id; dialog.Result.Name = known.Name; } store.Upsert(dialog.Result); RenderDevices(); Say("配对已保存，以后点「连接桌面」即可。"); });
         }
         void CopyPair()
         {
-            Guard(() => { if (!state.Ready) throw new InvalidOperationException("先登录个人专网，再复制本机连接码。"); string secret = SecretStore.ConfiguredHostSecret(); if (secret.Length == 0) throw new InvalidOperationException("本机还没有安装版创建的配对设置。请运行安装包完成配置；已有 RustDesk 的电脑会沿用原密码。"); Clipboard.SetText(PairCode.Create(Environment.MachineName, state.IPv4, secret)); Say("连接码已复制。它允许控制本机，请只粘贴到你们自己的电脑。"); });
+            Guard(() => { if (!state.Ready) throw new InvalidOperationException("先登录个人专网，再复制本机连接码。"); string secret = SecretStore.ConfiguredHostSecret(); if (secret.Length == 0) throw new InvalidOperationException("本机还没有安装版创建的配对设置。请运行安装包完成配置；已有 RustDesk 的电脑会沿用原密码。"); Clipboard.SetText(PairCode.Create(DeviceNames.Local(store.Root), state.IPv4, secret)); Say("连接码已复制。它允许控制本机，请只粘贴到你们自己的电脑。"); });
         }
         async Task Discover()
         {
@@ -324,7 +338,7 @@ namespace OwnDesk
             if (!preview) { badge.Text = state.Ready ? "●  专网已连接" : "●  专网尚未就绪"; badge.ForeColor = state.Ready ? Style.Green : Style.Muted; }
             if (localIp != null)
             {
-                localIp.Text = state.Ready ? (preview ? "我的电脑（示例）" : Environment.MachineName) : state.Backend == "NotInstalled" ? "请先运行安装包" : "首次使用：等待登录";
+                localIp.Text = preview ? "我的电脑（示例）" : DeviceNames.Local(store.Root);
                 localDescription.Text = state.Ready ? "已连接个人专网 · 发现 " + state.Peers.Count(x => string.Equals(x.OS, "windows", StringComparison.OrdinalIgnoreCase)) + " 台 Windows 电脑 · 复制连接码可配对本机" : "在「本机接入」点登录，按提示完成首次登录。";
             }
             if (page == 0) RenderDevices();

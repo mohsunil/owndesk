@@ -1,8 +1,8 @@
 {
   "product": "OwnDesk",
-  "version": "0.2.1",
-  "utc": "2026-10-14T09:03:44.3787185Z",
-  "passed": 26,
+  "version": "0.2.2",
+  "utc": "2026-10-15T02:04:24.5894858Z",
+  "passed": 28,
   "failed": 0,
   "checks": [
     {
@@ -12,6 +12,16 @@
     },
     {
       "name": "Device persistence, editing and duplicate rejection",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "Local names persist and travel in pairing codes without changing device identity",
+      "passed": true,
+      "error": ""
+    },
+    {
+      "name": "Renaming a saved computer preserves pairing credentials, address and history",
       "passed": true,
       "error": ""
     },

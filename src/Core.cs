@@ -15,7 +15,7 @@ namespace OwnDesk
 {
     public static class AppInfo
     {
-        public const string Version = "0.2.1";
+        public const string Version = "0.2.2";
         public const string ProductTitle = "巫妖的远程魔导控制系统";
         public const string EngineVersion = "1.5.0";
         public const string EngineHash = "8555777215510d83d2d61c9dc984e4fcc838bd7e79f9d18a42585431f5e8bb47";

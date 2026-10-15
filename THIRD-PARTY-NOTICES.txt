@@ -1,4 +1,4 @@
-OwnDesk / 巫妖远控 v0.2.1
+OwnDesk / 巫妖远控 v0.2.2
 
 RustDesk 1.5.0 (unmodified official executable)
   Project: https://github.com/rustdesk/rustdesk
@@ -12,7 +12,7 @@ RustDesk 1.5.0 (unmodified official executable)
   Exact hbb_common commit: 229b904508364c8997aad0fb5af57effac859f60
   Copyrights retained in upstream archives. Native engine branding remains.
 
-Tailscale (first-install download, not bundled)
+Tailscale (official MSI bundled for first installation)
   https://tailscale.com/ and https://tailscale.com/pricing
   Official amd64 MSI version 1.102.2:
   https://pkgs.tailscale.com/stable/tailscale-setup-1.102.2-amd64.msi
@@ -26,3 +26,4 @@ Windows and .NET Framework are system-provided, not redistributed.
 Installer and manager currently do not carry commercial Authenticode signatures.
 The signed update feed is a separate publisher-key mechanism.
 Not affiliated with ToDesk, RustDesk, Tailscale or Microsoft.
+
